@@ -8,7 +8,6 @@ const SignalList = () => {
   const [error, setError] = useState(null);
   const [idQuery, setIdQuery] = useState("");
   const [deletingId, setDeletingId] = useState(null);
-  const [rawResponse, setRawResponse] = useState(null);
 
   const navigate = useNavigate();
 
@@ -30,12 +29,7 @@ const SignalList = () => {
     } catch (err) {
       console.error("Error fetching signals:", err);
       setSignals([]);
-      setError(
-        err.response?.data?.title ||
-          err.response?.data?.message ||
-          err.message ||
-          "Failed to fetch signals"
-      );
+      setError(err.message || "Failed to fetch signals");
     } finally {
       setLoading(false);
     }
@@ -49,12 +43,8 @@ const SignalList = () => {
     }
     setLoading(true);
     setError(null);
-    setRawResponse(null);
     try {
       const res = await signalApi.getById(id);
-      // Store the raw response
-      setRawResponse(res.data);
-      
       // Also update the table view
       const data = res.data || {};
       const normalized = {
@@ -67,13 +57,7 @@ const SignalList = () => {
     } catch (err) {
       console.error("Error fetching signal by id:", err);
       setSignals([]);
-      setRawResponse(err.response?.data || { error: err.message });
-      setError(
-        err.response?.data?.title ||
-          err.response?.data?.message ||
-          err.message ||
-          "Failed to fetch signal"
-      );
+      setError(err.message || "Failed to fetch signal");
     } finally {
       setLoading(false);
     }
@@ -136,10 +120,9 @@ const SignalList = () => {
             </button>
             <button
               onClick={() => {
-                fetchSignals();
-                setRawResponse(null);
-                setIdQuery("");
-              }}
+                  fetchSignals();
+                  setIdQuery("");
+                }}
               className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-primary text-white text-sm hover:opacity-95"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -151,23 +134,7 @@ const SignalList = () => {
         </div>
       </div>
 
-      {/* Backend Response Display */}
-      {rawResponse && (
-        <div className="mb-4 overflow-x-auto bg-gray-50 rounded-xl p-4">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-sm font-medium text-gray-700">Backend Response:</div>
-            <button 
-              onClick={() => setRawResponse(null)}
-              className="text-xs text-gray-500 hover:text-gray-700"
-            >
-              Hide
-            </button>
-          </div>
-          <pre className="text-sm text-gray-600 whitespace-pre-wrap">
-            {JSON.stringify(rawResponse, null, 2)}
-          </pre>
-        </div>
-      )}
+      {/* Backend raw response display removed to avoid leaking backend internals in UI */}
 
       {/* Table */}
       <div className="overflow-x-auto bg-white rounded-2xl p-4 card-shadow">

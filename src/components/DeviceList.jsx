@@ -8,11 +8,33 @@ const DeviceList = () => {
   const [error, setError] = useState(null);
   const [idQuery, setIdQuery] = useState("");
   const [deletingId, setDeletingId] = useState(null);
-  const [rawResponse, setRawResponse] = useState(null);
 
   const navigate = useNavigate();
 
-  // Fetch a single device by id and set it as the list (so table can reuse same rendering)
+  // ✅ Fetch all devices
+  const fetchDevices = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await deviceApi.getAll();
+      const list = res.data || [];
+      // normalize backend casing
+      const normalizedList = list.map((d) => ({
+        deviceId: d.deviceId ?? d.DeviceId,
+        deviceName: d.deviceName ?? d.DeviceName,
+        deviceType: d.deviceType ?? d.DeviceType,
+      }));
+      setDevices(normalizedList);
+    } catch (err) {
+      console.error("Error fetching devices:", err);
+      setDevices([]);
+      setError(err.message || "Failed to fetch devices");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // ✅ Fetch single device by ID
   const fetchDeviceById = useCallback(async (id) => {
     if (!id) {
       alert("Please enter a Device ID");
@@ -20,55 +42,25 @@ const DeviceList = () => {
     }
     setLoading(true);
     setError(null);
-    setRawResponse(null);
     try {
       const res = await deviceApi.getById(id);
-      // Store the raw response
-      setRawResponse(res.data);
-      
-      // Also update the table view
       const data = res.data || {};
-      // normalize backend casing to expected keys used in the table
       const normalized = {
         deviceId: data.deviceId ?? data.DeviceId,
         deviceName: data.deviceName ?? data.DeviceName,
-        description: data.description ?? data.Description,
+        deviceType: data.deviceType ?? data.DeviceType,
       };
       setDevices([normalized]);
     } catch (err) {
       console.error("Error fetching device by id:", err);
       setDevices([]);
-      setRawResponse(err.response?.data || { error: err.message });
-      // show backend message when available
-      setError(err.response?.data?.title || err.response?.data?.message || err.message || "Failed to fetch device");
+      setError(err.message || "Failed to fetch device");
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Fetch all devices (used on initial load and when user wants to restore full list)
-  const fetchDevices = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await deviceApi.getAll();
-      const list = res.data || [];
-      // normalize each item to expected keys
-      const normalizedList = list.map((data) => ({
-        deviceId: data.deviceId ?? data.DeviceId,
-        deviceName: data.deviceName ?? data.DeviceName,
-        description: data.description ?? data.Description,
-      }));
-      setDevices(normalizedList);
-    } catch (err) {
-      console.error("Error fetching devices:", err);
-      setDevices([]);
-      setError(err.response?.data?.title || err.response?.data?.message || err.message || "Failed to fetch devices");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
+  // ✅ Delete device
   const handleDelete = async (id) => {
     const confirm = window.confirm("Delete this device? This action cannot be undone.");
     if (!confirm) return;
@@ -85,10 +77,8 @@ const DeviceList = () => {
   };
 
   useEffect(() => {
-    // On mount, load all devices
     fetchDevices();
   }, [fetchDevices]);
-
 
   return (
     <div className="mt-6">
@@ -124,11 +114,7 @@ const DeviceList = () => {
               Fetch Device
             </button>
             <button
-              onClick={() => {
-                fetchDevices();
-                setRawResponse(null);
-                setIdQuery("");
-              }}
+              onClick={() => { fetchDevices(); setIdQuery(""); }}
               className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-primary text-white text-sm hover:opacity-95"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -140,32 +126,14 @@ const DeviceList = () => {
         </div>
       </div>
 
-      {/* Backend Response Display */}
-      {rawResponse && (
-        <div className="mb-4 overflow-x-auto bg-gray-50 rounded-xl p-4">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-sm font-medium text-gray-700">Backend Response:</div>
-            <button 
-              onClick={() => setRawResponse(null)}
-              className="text-xs text-gray-500 hover:text-gray-700"
-            >
-              Hide
-            </button>
-          </div>
-          <pre className="text-sm text-gray-600 whitespace-pre-wrap">
-            {JSON.stringify(rawResponse, null, 2)}
-          </pre>
-        </div>
-      )}
-
       <div className="overflow-x-auto bg-white rounded-2xl p-4 card-shadow">
         {loading ? (
           <div className="py-6 text-center text-sm text-gray-600">Loading devices...</div>
         ) : error ? (
           <div className="py-6 text-center text-sm text-red-600">
-            <div>Failed to load devices: {error}</div>
+            <div>Failed to load devices: {String(error)}</div>
             <div className="mt-2">
-              <button className="rounded px-3 py-1 bg-primary text-white" onClick={() => fetchDeviceById(idQuery)}>
+              <button className="rounded px-3 py-1 bg-primary text-white" onClick={fetchDevices}>
                 Retry
               </button>
             </div>
