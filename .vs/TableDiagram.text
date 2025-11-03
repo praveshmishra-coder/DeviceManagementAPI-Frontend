@@ -1,0 +1,46 @@
+@startuml
+title **DeviceManagementDB - ER Diagram**
+
+entity "📦 Devices" as Devices {
+  *DeviceId : INT <<PK>>
+  --
+  DeviceName : NVARCHAR(100)
+  Description : NVARCHAR(255)
+  --
+  📌 Stores details of devices such as sensors, controllers, or IoT units
+}
+
+entity "🧱 Assets" as Assets {
+  *AssetId : INT <<PK>>
+  DeviceId : INT <<FK>>
+  AssetName : NVARCHAR(100)
+  --
+  📌 Represents parts/components linked to a Device
+}
+
+entity "📶 SignalMeasurements" as SignalMeasurements {
+  *SignalId : INT <<PK>>
+  AssetId : INT <<FK>>
+  SignalTag : NVARCHAR(100)
+  RegisterAddress : NVARCHAR(100)
+  --
+  📌 Stores measurement tags (temperature, pressure, etc.)
+}
+
+' Relationships
+Devices ||--o{ Assets : "1️⃣ One Device → Many Assets"
+Assets ||--o{ SignalMeasurements : "1️⃣ One Asset → Many SignalMeasurements"
+
+' Notes
+note top of Devices
+DATABASE: DeviceManagementDB
+end note
+
+note right of Assets
+📊 Example Hierarchy:
+Device = "Boiler System"
+ └── Asset = "Temperature Sensor"
+     └── Signal = "BoilerTemp_Tag001"
+end note
+
+@enduml
