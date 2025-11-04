@@ -23,6 +23,7 @@ const DeviceList = () => {
         deviceId: d.deviceId ?? d.DeviceId,
         deviceName: d.deviceName ?? d.DeviceName,
         deviceType: d.deviceType ?? d.DeviceType,
+        deviceDescription: d.deviceDescription ?? d.DeviceDescription ?? d.description ?? d.Description,
       }));
       setDevices(normalizedList);
     } catch (err) {
@@ -49,6 +50,7 @@ const DeviceList = () => {
         deviceId: data.deviceId ?? data.DeviceId,
         deviceName: data.deviceName ?? data.DeviceName,
         deviceType: data.deviceType ?? data.DeviceType,
+        deviceDescription: data.deviceDescription ?? data.DeviceDescription ?? data.description ?? data.Description,
       };
       setDevices([normalized]);
     } catch (err) {
@@ -157,7 +159,7 @@ const DeviceList = () => {
                   >
                     <td className="px-4 py-3">{d.deviceId}</td>
                     <td className="px-4 py-3">{d.deviceName}</td>
-                    <td className="px-4 py-3 text-gray-600">{d.description}</td>
+                    <td className="px-4 py-3 text-gray-600">{d.deviceDescription}</td>
                     <td className="px-4 py-3 text-right">
                       <div className="inline-flex items-center gap-2">
                         <button
